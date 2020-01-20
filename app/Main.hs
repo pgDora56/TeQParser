@@ -2,9 +2,12 @@
 module Main where
 
 import System.IO
+import Data.List
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
+-- complete to make calColumnSize and other functions
+-- next -> tex file to calcolumnsize 
 main :: IO ()
 main = do 
     handle <- openFile "test.csv" ReadMode
@@ -13,7 +16,7 @@ main = do
     handlef <- openFile "format.tex" ReadMode
     fmt <- T.hGetContents handlef
     hClose handlef
-    T.putStrLn (T.showList $ calColumnSize text)
+    putStrLn $ intercalate (T.unpack ",") (map show (calColumnSize text))
     T.writeFile "output/test.tex" (makeTex text fmt)
     putStrLn "Parse successfly."
 
@@ -37,12 +40,14 @@ makeContent t = T.unlines l
 repAmp :: T.Text -> T.Text
 repAmp t = T.replace "," " & " t
 
--- Error...How to separate Csv to Array????? Not splitOn????
 calColumnSize :: T.Text -> [Int]
-calColumnSize t = foldr (\x zipWith max (map length (splitOn "," x))) (replicate cnts 0) tlist
+calColumnSize t = foldr colMaxiSize (replicate cnts 0) tlist
                 where 
-                    cnts = map countComma tlist
+                    cnts = foldr max 0 (map countComma tlist)
                     tlist = T.lines t
+
+colMaxiSize :: T.Text -> [Int] -> [Int]
+colMaxiSize x xs = zipWith max xs (map T.length (T.splitOn "," x))
 
 countComma :: T.Text -> Int
 countComma t = T.count "," t
